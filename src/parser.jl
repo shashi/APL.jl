@@ -4,20 +4,17 @@ abstract Fn
 
 immutable Α <: Arr end
 immutable Ω <: Arr end
-immutable Const <: Arr
-    exp
-end
-immutable Apply <: Arr # This could both be a funciton or an array....
-    f::Union(Fn, Op)
+immutable Apply{T} <: Arr # This could both be a funciton or an array....
+    f::T
     r::Arr
 end
-immutable Apply2 <: Arr
-    f::Union(Fn, Op)
+immutable Apply2{T} <: Arr
+    f::T
     l::Arr
     r::Arr
 end
-immutable JlExpr <: Arr
-    exp
+immutable JlVal <: Arr
+    val
 end
 
 immutable Op1Sym{c} <: Op end
@@ -42,6 +39,10 @@ end
 
 immutable PrimFn{c} <: Fn end
 
+immutable UDefFn{arity}
+    ast
+end
+
 "e.g. 1 2 3"
 cons(l, ::Nothing) = l
 
@@ -60,22 +61,25 @@ cons{c, L<:Fn, R}(l::L, r::Op2Partial{c,R}) = Op2{c, L, R}(l, r.r)
 "e.g. - 1 2 3"
 cons(l::Union(Fn, Op), r::Arr) = Apply(l, r)
 
-"e.g. ⋅- 1 2 3"
+"e.g. .- 1 2 3"
 cons(l::Union(Fn, Op), r::Apply) = Apply(cons(l, r.f), r.r)
 
 "e.g 1 2 3 ω"
-cons(a::Arr, b::Arr) = ConcArr(a,b) # LOL
+cons(a::Arr, b::Arr) = ConcArr(a,b) # is this even correct?
 
 "e.g 1 2 3 × 1 2 3"
 cons(l::Arr, r::Apply) = Apply2(r.f, l, r.r)
 
-cons(x, y) = error("Invalid syntax: $x next to $y")
+"e.g. /ι10"
+cons{T<:Fn}(l::Op1Sym, r::Apply{T}) = Apply(l, r)
 
-const numeric = ['⁻', ' ', '0':'9'..., '.']
-const monadic_operators = ['\\', '/']
-const diadic_operators = ['⋅']
-const functions = ['+', '-', '|', '>', '≥', '≤', '≠', '*', '×', ',']
-const argnames = ['α', 'ω']
+"e.g. -/ι10"
+cons{T<:Fn}(l::Fn, r::Apply{T}) = Apply(l, r)
+
+"e.g ι3 × ι3"
+cons(l::Fn, r::Apply2) = Apply2(r.f, cons(l, r.l), r.r)
+
+cons(x, y) = error("Invalid syntax: $x next to $y")
 
 function parse_apl(str)
     # top-level parsing
@@ -84,23 +88,28 @@ function parse_apl(str)
     i = start(s)
     exp = nothing
 
+    arity = 0
+
     while !done(s, i)
         c, nxt = next(s, i)
-        if c in numeric
+        if c == ' '
+        elseif c in dyadic_operators
+            exp = cons(Op2Sym{c}(), exp)
+        elseif c in numeric
             nums, nxt = parse_strand(s, i)
-            exp = cons(JlExpr(nums), exp)
-        elseif c in functions
+            exp = cons(JlVal(nums), exp)
+        elseif c in function_names
             exp = cons(PrimFn{c}(), exp)
         elseif c in monadic_operators
             exp = cons(Op1Sym{c}(), exp)
-        elseif c in diadic_operators
-            exp = cons(Op2Sym{c}(), exp)
         elseif c == 'α'
+            arity = 2
             exp = cons(Α(), exp)
         elseif c == 'ω'
+            arity = 1
             exp = cons(Ω(), exp)
         else
-            error("$c: undefined symbol")
+            error("$c: undefined APL symbol")
         end
         i=nxt
     end
@@ -128,6 +137,6 @@ function parse_strand(str, i)
         end
     end
     strand = strip(takebuf_string(buf), ['\,'])
-    parse("[" * reverse(strand) * "]"), broke ? p : i
+    parse("[" * reverse(strand) * "]") |> eval, broke ? p : i
 end
 

@@ -2,7 +2,7 @@ import Base.show
 
 show(io::IO, ::Α) = write(io, "α")
 show(io::IO, ::Ω) = write(io, "ω")
-show(io::IO, jl::JlExpr) = write(io, join(map(string, eval(jl.exp)), ' '))
+show(io::IO, jl::JlVal) = write(io, join(map(string, jl.val), ' '))
 show(io::IO, a::Apply) = (show(io, a.f); write(io, ' '); show(io, a.r))
 function show(io::IO, a::Apply2)
     show(io, a.l)
