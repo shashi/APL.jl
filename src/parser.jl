@@ -1,47 +1,5 @@
-abstract Arr
-abstract Op
-abstract Fn
 
-immutable Α <: Arr end
-immutable Ω <: Arr end
-immutable Apply{T} <: Arr # This could both be a funciton or an array....
-    f::T
-    r::Arr
-end
-immutable Apply2{T} <: Arr
-    f::T
-    l::Arr
-    r::Arr
-end
-immutable JlVal <: Arr
-    val
-end
-
-immutable Op1Sym{c} <: Op end
-
-immutable Op1{c, L} <: Fn
-    l::L
-end
-
-immutable Op2Sym{c} <: Op end
-immutable Op2Partial{c, R} <: Op
-    r::R
-end
-immutable Op2{c, L, R} <: Fn
-    l::L
-    r::R
-end
-
-immutable ConcArr <: Arr
-    l
-    r
-end
-
-immutable PrimFn{c} <: Fn end
-
-immutable UDefFn{arity} <: Fn
-    ast
-end
+include("defns.jl")
 
 "e.g. 1 2 3"
 cons(l, ::Nothing) = l
@@ -76,12 +34,18 @@ cons{T<:Fn}(l::Op1Sym, r::Apply{T}) = Apply(l, r)
 "e.g. -/ι10"
 cons{T<:Fn}(l::Fn, r::Apply{T}) = Apply(l, r)
 
+"e.g. ↔/⍬"
+cons{c}(l::Op1Sym{c}, r::Union(Op1Sym,OpSymPair)) = OpSymPair{c}(r)
+
+"e.g. ×↔/⍬"
+cons{L<:Fn, c}(l::L, ops::OpSymPair{c}) = cons(Op1{c, L}(l), ops.r)
+
 # "e.g ι3 × ι3"
 # cons(l::Fn, r::Apply2) = Apply2(r.f, cons(l, r.l), r.r)
 
 cons(x, y) = error("Invalid syntax: $x next to $y")
 
-parse_apl(str) = parse_apl(reverse(str), start(str), 0, 0)[1]
+parse_apl(str) = parse_apl(reverse(replace(str, r"\s+", " ")), start(str), 0, 0)[1]
 function parse_apl(s, i, paren_level, curly_level)
     # top-level parsing
     exp = nothing
@@ -118,6 +82,8 @@ function parse_apl(s, i, paren_level, curly_level)
         elseif c == 'ω'
             arity = max(arity, 1)
             exp = cons(Ω(), exp)
+        elseif c == '⍬'
+            exp = JlVal(Float64[])
         else
             error("$c: undefined APL symbol")
         end
@@ -130,11 +96,13 @@ function parse_strand(str, i)
     buf = IOBuffer()
     p = i
     broke = false
+    scalar = true
     while !done(str, i)
         p = i
         c, i = next(str, i)
         if c == ' '
             write(buf, ',')
+            scalar=false
         elseif c == '⁻'
             write(buf, '-')
         elseif c == '.'
@@ -146,7 +114,7 @@ function parse_strand(str, i)
             break
         end
     end
-    strand = strip(takebuf_string(buf), ['\,'])
-    parse("[" * reverse(strand) * "]") |> eval, broke ? p : i
+    s = reverse(strip(takebuf_string(buf), ['\,']))
+    parse(scalar ? s : "[$s]") |> eval, broke ? p : i
 end
 

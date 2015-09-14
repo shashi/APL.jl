@@ -2,18 +2,17 @@
 export eval_apl
 import Base.call
 
-immutable Env
-    α
-    ω
-end
-eval_apl(ex) = eval_apl(ex, Env(nothing,nothing))
-eval_apl(f, env) = f
-eval_apl(v::JlVal, env) = v.val
-eval_apl(::Α, env) = env.α
-eval_apl(::Ω, env) = env.ω
-eval_apl(x::Apply, env)  = eval_apl(x.f, env)(eval_apl(x.r, env))
-eval_apl(x::Apply2, env) = eval_apl(x.f, env)(eval_apl(x.l, env), eval_apl(x.r, env))
+# eval
+eval_apl(ex) = eval_apl(ex, nothing, nothing)
+eval_apl(f, α, ω) = f
+eval_apl(v::JlVal, α, ω) = v.val
+eval_apl(::Α, α, ω) = α
+eval_apl(::Ω, α, ω) = ω
+eval_apl(x::Apply, α, ω)  = eval_apl(x.f, α, ω)(eval_apl(x.r, α, ω))
+eval_apl(x::ConcArr, α, ω)  = vcat(eval_apl(x.l, α, ω), eval_apl(x.r, α, ω))
+eval_apl(x::Apply2, α, ω) = eval_apl(x.f, α, ω)(eval_apl(x.l, α, ω), eval_apl(x.r, α, ω))
 
+# call methods for primitive functions
 mkbody1(x::Symbol) = :($x(ω))
 mkbody1(x::Expr) = x
 mkbody2(x::Symbol) = :($x(α, ω))
@@ -24,29 +23,19 @@ for (sym, fns) in prim_fns
     dya != nothing && @eval call(f::PrimFn{$sym}, α, ω) = $(mkbody2(dya))
 end
 
-identity(::PrimFn{'+'}) = 0
-identity(::PrimFn{'-'}) = 0
-identity(::PrimFn{'*'}) = 1
-identity(::PrimFn{','}) = [] # ...
-function prefix_scan(f, x) # optimizations are just dispatch on f!
-    fst = f(identity(f), x[1])
-    y = Array(typeof(fst), length(x))
-    y[1] = fst
-    for i=2:length(y)
-      y[i] =f(y[i-1], x[i])
-    end
-    y
-end
-call(op::Op1{'/'}, ω) = reducedim((x,y)->op.l(x,y), ω, ndims(ω)) # Gah, Base
-call(op::Op1{'⌿'}, ω) = reducedim((x,y)->op.l(x,y), ω, 1)
-call(op::Op1{'\\'}, ω) = prefix_scan(op.l, ω)
-call(op::Op1{'⍀'}, ω) = prefix_scan(op.l, ω) # Todo
+# call methods for primitive operators
+call(op::Op1{'/'}, ω) = reducedim(op.l, ω, ndims(ω), identity(op.l, eltype(ω))) # wow Base.reducedim is a mess
+call(op::Op1{'⌿'}, ω) = reducedim(op.l, ω, 1, identity(op.l, eltype(ω)))
+call(op::Op1{'\\'}, ω) = prefix_scan(op.l, ω, identity(op.l, ω))
+call(op::Op1{'⍀'}, ω) = prefix_scan(op.l, ω, identity(op.l, ω)) # Todo
 call(op::Op1{'¨'}, ω) = map(op.l, ω)
 call(op::Op1{'↔'}, α, ω) = op.l(ω, α)
+call(op::Op1{'⍨'}, α, ω) = op.l(ω, α)
 call(op::Op2{'.'}, α, ω) = reduce(op.l, op.r(convert(Array, α), convert(Array, ω)))
 call(op::Op2{'⋅'}, α) = op.l(op.r(α)) # compose
 call(op::Op1{'∘'}, α, ω) = [op.l(x, y) for x in α, y in ω]
 
-call(fn::UDefFn{0}) = fn.ast()
-call(fn::UDefFn{1}, ω) = eval_apl(fn.ast, Env(nothing, ω))
-call(fn::UDefFn{2}, α, ω) = eval_apl(fn.ast, Env(α, ω))
+# user defined functions
+call(fn::UDefFn{0}) = eval_apl(fn.ast)
+call(fn::UDefFn{1}, ω) = eval_apl(fn.ast, nothing, ω)
+call(fn::UDefFn{2}, α, ω) = eval_apl(fn.ast, α, ω)
