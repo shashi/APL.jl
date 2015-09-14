@@ -3,11 +3,10 @@ export eval_apl
 import Base.call
 
 immutable Env
-    env
     α
     ω
 end
-eval_apl(ex) = eval_apl(ex, Env(nothing, nothing,nothing))
+eval_apl(ex) = eval_apl(ex, Env(nothing,nothing))
 eval_apl(f, env) = f
 eval_apl(v::JlVal, env) = v.val
 eval_apl(::Α, env) = env.α
@@ -38,9 +37,16 @@ function prefix_scan(f, x) # optimizations are just dispatch on f!
     end
     y
 end
-call(op::Op1{'/'}, ω) = reduce(op.l, ω)
+call(op::Op1{'/'}, ω) = reducedim((x,y)->op.l(x,y), ω, ndims(ω)) # Gah, Base
+call(op::Op1{'⌿'}, ω) = reducedim((x,y)->op.l(x,y), ω, 1)
 call(op::Op1{'\\'}, ω) = prefix_scan(op.l, ω)
+call(op::Op1{'⍀'}, ω) = prefix_scan(op.l, ω) # Todo
 call(op::Op1{'¨'}, ω) = map(op.l, ω)
 call(op::Op1{'↔'}, α, ω) = op.l(ω, α)
 call(op::Op2{'.'}, α, ω) = reduce(op.l, op.r(convert(Array, α), convert(Array, ω)))
-call(op::Op2{'∘'}, α) = op.l(op.r(α))
+call(op::Op2{'⋅'}, α) = op.l(op.r(α)) # compose
+call(op::Op1{'∘'}, α, ω) = [op.l(x, y) for x in α, y in ω]
+
+call(fn::UDefFn{0}) = fn.ast()
+call(fn::UDefFn{1}, ω) = eval_apl(fn.ast, Env(nothing, ω))
+call(fn::UDefFn{2}, α, ω) = eval_apl(fn.ast, Env(α, ω))

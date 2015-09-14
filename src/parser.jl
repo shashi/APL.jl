@@ -39,7 +39,7 @@ end
 
 immutable PrimFn{c} <: Fn end
 
-immutable UDefFn{arity}
+immutable UDefFn{arity} <: Fn
     ast
 end
 
@@ -76,16 +76,14 @@ cons{T<:Fn}(l::Op1Sym, r::Apply{T}) = Apply(l, r)
 "e.g. -/ι10"
 cons{T<:Fn}(l::Fn, r::Apply{T}) = Apply(l, r)
 
-"e.g ι3 × ι3"
-cons(l::Fn, r::Apply2) = Apply2(r.f, cons(l, r.l), r.r)
+# "e.g ι3 × ι3"
+# cons(l::Fn, r::Apply2) = Apply2(r.f, cons(l, r.l), r.r)
 
 cons(x, y) = error("Invalid syntax: $x next to $y")
 
-function parse_apl(str)
+parse_apl(str) = parse_apl(reverse(str), start(str), 0, 0)[1]
+function parse_apl(s, i, paren_level, curly_level)
     # top-level parsing
-    isempty(str) && return rhs
-    s = reverse(str)
-    i = start(s)
     exp = nothing
 
     arity = 0
@@ -93,6 +91,18 @@ function parse_apl(str)
     while !done(s, i)
         c, nxt = next(s, i)
         if c == ' '
+        elseif c == ')'
+            subexp,nxt,plvl,clvl,arity = parse_apl(s, nxt, paren_level+1, curly_level)
+            plvl != paren_level && error("Parenthesis error")
+            exp = cons(subexp, exp)
+        elseif c == '('
+            return exp, nxt, paren_level-1, curly_level, arity
+        elseif c == '}'
+            fn_exp,nxt,plvl,clvl,arity = parse_apl(s, nxt, paren_level, curly_level+1)
+            clvl != curly_level && error("Parenthesis error")
+            exp = cons(UDefFn{arity}(fn_exp), exp)
+        elseif c == '{'
+            return exp, nxt, paren_level, curly_level-1,arity
         elseif c in dyadic_operators
             exp = cons(Op2Sym{c}(), exp)
         elseif c in numeric
@@ -106,14 +116,14 @@ function parse_apl(str)
             arity = 2
             exp = cons(Α(), exp)
         elseif c == 'ω'
-            arity = 1
+            arity = max(arity, 1)
             exp = cons(Ω(), exp)
         else
             error("$c: undefined APL symbol")
         end
         i=nxt
     end
-    exp
+    exp,i,paren_level, curly_level, arity
 end
 
 function parse_strand(str, i)
