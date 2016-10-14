@@ -1,6 +1,5 @@
 
 export eval_apl
-import Base.call
 
 # eval
 eval_apl(ex) = eval_apl(ex, nothing, nothing)
@@ -19,23 +18,23 @@ mkbody2(x::Symbol) = :($x(α, ω))
 mkbody2(x::Expr) = x
 for (sym, fns) in prim_fns
     mon, dya = fns
-    mon != nothing && @eval call(f::PrimFn{$sym}, ω) = $(mkbody1(mon))
-    dya != nothing && @eval call(f::PrimFn{$sym}, α, ω) = $(mkbody2(dya))
+    mon != nothing && @eval (f::PrimFn{$sym})(ω) = $(mkbody1(mon))
+    dya != nothing && @eval (f::PrimFn{$sym})(α, ω) = $(mkbody2(dya))
 end
 
 # call methods for primitive operators
-call(op::Op1{'/'}, ω) = reducedim(op.l, ω, ndims(ω), identity(op.l, eltype(ω))) # wow Base.reducedim is a mess
-call(op::Op1{'⌿'}, ω) = reducedim(op.l, ω, 1, identity(op.l, eltype(ω)))
-call(op::Op1{'\\'}, ω) = prefix_scan(op.l, ω, identity(op.l, ω))
-call(op::Op1{'⍀'}, ω) = prefix_scan(op.l, ω, identity(op.l, ω)) # Todo
-call(op::Op1{'¨'}, ω) = map(op.l, ω)
-call(op::Op1{'↔'}, α, ω) = op.l(ω, α)
-call(op::Op1{'⍨'}, α, ω) = op.l(ω, α)
-call(op::Op2{'.'}, α, ω) = reduce(op.l, op.r(convert(Array, α), convert(Array, ω)))
-call(op::Op2{'⋅'}, α) = op.l(op.r(α)) # compose
-call(op::Op1{'∘'}, α, ω) = [op.l(x, y) for x in α, y in ω]
+(op::Op1{'/'})(ω) = reducedim(op.l, ω, ndims(ω), identity(op.l, eltype(ω))) # wow Base.reducedim is a mess
+(op::Op1{'⌿'})(ω) = reducedim(op.l, ω, 1, identity(op.l, eltype(ω)))
+(op::Op1{'\\'})(ω) = prefix_scan(op.l, ω, identity(op.l, ω))
+(op::Op1{'⍀'})(ω) = prefix_scan(op.l, ω, identity(op.l, ω)) # Todo
+(op::Op1{'¨'})(ω) = map(op.l, ω)
+(op::Op1{'↔'})(α, ω) = op.l(ω, α)
+(op::Op1{'⍨'})(α, ω) = op.l(ω, α)
+(op::Op2{'.'})(α, ω) = reduce(op.l, op.r(convert(Array, α), convert(Array, ω)))
+(op::Op2{'⋅'})(α) = op.l(op.r(α)) # compose
+(op::Op1{'∘'})(α, ω) = [op.l(x, y) for x in α, y in ω]
 
 # user defined functions
-call(fn::UDefFn{0}) = eval_apl(fn.ast)
-call(fn::UDefFn{1}, ω) = eval_apl(fn.ast, nothing, ω)
-call(fn::UDefFn{2}, α, ω) = eval_apl(fn.ast, α, ω)
+(fn::UDefFn{0})() = eval_apl(fn.ast)
+(fn::UDefFn{1})(ω) = eval_apl(fn.ast, nothing, ω)
+(fn::UDefFn{2})(α, ω) = eval_apl(fn.ast, α, ω)

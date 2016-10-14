@@ -2,12 +2,9 @@
 include("defns.jl")
 
 "e.g. 1 2 3"
-cons(l, ::Nothing) = l
+cons(l, ::Void) = l
 
 "e.g. +/"
-cons{L<:Fn, c}(l::L, ::Op1Sym{c}) = Op1{c, L}(l)
-
-"e.g. / 1 2 3"
 cons{L<:Fn, c}(l::L, ::Op1Sym{c}) = Op1{c, L}(l)
 
 "e.g. .×"
@@ -17,10 +14,10 @@ cons{c, R<:Fn}(l::Op2Sym{c}, r::R) = Op2Partial{c, R}(r)
 cons{c, L<:Fn, R}(l::L, r::Op2Partial{c,R}) = Op2{c, L, R}(l, r.r)
 
 "e.g. - 1 2 3"
-cons(l::Union(Fn, Op), r::Arr) = Apply(l, r)
+cons(l::Union{Fn, Op}, r::Arr) = Apply(l, r)
 
 "e.g. .- 1 2 3"
-cons(l::Union(Fn, Op), r::Apply) = Apply(cons(l, r.f), r.r)
+cons(l::Union{Fn, Op}, r::Apply) = Apply(cons(l, r.f), r.r)
 
 "e.g 1 2 3 ω"
 cons(a::Arr, b::Arr) = ConcArr(a,b) # is this even correct?
@@ -35,7 +32,7 @@ cons{T<:Fn}(l::Op1Sym, r::Apply{T}) = Apply(l, r)
 cons{T<:Fn}(l::Fn, r::Apply{T}) = Apply(l, r)
 
 "e.g. ↔/⍬"
-cons{c}(l::Op1Sym{c}, r::Union(Op1Sym,OpSymPair)) = OpSymPair{c}(r)
+cons{c}(l::Op1Sym{c}, r::Union{Op1Sym,OpSymPair}) = OpSymPair{c}(r)
 
 "e.g. ×↔/⍬"
 cons{L<:Fn, c}(l::L, ops::OpSymPair{c}) = cons(Op1{c, L}(l), ops.r)

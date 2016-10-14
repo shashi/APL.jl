@@ -122,7 +122,6 @@ identity(::PrimFn{'+'}, ω::Type{Bool}) = 0
 identity(::PrimFn{'-'}, ω::Type{Bool}) = 0
 identity{T}(::PrimFn{'-'}, ω::Type{T}) = zero(T)
 identity{T}(::PrimFn{'×'}, ω::Type{T}) = one(T)
-identity{T}(::PrimFn{'×'}, ω::Type{T}) = one(T)
 identity{T}(::PrimFn{'∨'}, ω::Type{T}) = zero(T)
 identity{T}(::PrimFn{'∧'}, ω::Type{T}) = one(T)
 identity{T}(::PrimFn{'⌈'}, ω::Type{T}) = typemin(T)
