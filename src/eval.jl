@@ -22,8 +22,19 @@ for (sym, fns) in prim_fns
     dya != nothing && @eval (f::PrimFn{$sym})(α, ω) = $(mkbody2(dya))
 end
 
+function actuallyreducedim(f, xs::AbstractArray, ident)
+    squeeze(
+        reducedim(f, xs, ndims(xs), ident),
+        ndims(xs)
+    )
+end
+
+function actuallyreducedim(f, xs::AbstractVector, ident)
+    reduce(f, ident, xs)
+end
+
 # call methods for primitive operators
-(op::Op1{'/'})(ω) = reducedim(op.l, ω, ndims(ω), identity(op.l, eltype(ω))) # wow Base.reducedim is a mess
+(op::Op1{'/'})(ω) = actuallyreducedim(op.l, ω, identity(op.l, eltype(ω)))
 (op::Op1{'⌿'})(ω) = reducedim(op.l, ω, 1, identity(op.l, eltype(ω)))
 (op::Op1{'\\'})(ω) = prefix_scan(op.l, ω, identity(op.l, ω))
 (op::Op1{'⍀'})(ω) = prefix_scan(op.l, ω, identity(op.l, ω)) # Todo
