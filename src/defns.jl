@@ -1,49 +1,53 @@
 
-abstract Arr
-abstract Op
-abstract Fn
+abstract type Arr 
+end
+abstract type Op 
+end
+abstract type Fn 
 
-immutable Α <: Arr end
-immutable Ω <: Arr end
-immutable Apply{T} <: Arr # This could both be a funciton or an array....
+end
+
+struct Α <: Arr end
+struct Ω <: Arr end
+struct Apply{T} <: Arr # This could both be a funciton or an array....
     f::T
     r::Arr
 end
-immutable Apply2{T} <: Arr
+struct Apply2{T} <: Arr
     f::T
     l::Arr
     r::Arr
 end
-immutable JlVal <: Arr
+struct JlVal <: Arr
     val
 end
 
-immutable Op1Sym{c} <: Op end
+struct Op1Sym{c} <: Op end
 
-immutable Op1{c, L} <: Fn
+struct Op1{c, L} <: Fn
     l::L
 end
-immutable OpSymPair{c} <: Op
+struct OpSymPair{c} <: Op
     r # Op1Sym
 end
 
-immutable Op2Sym{c} <: Op end
-immutable Op2Partial{c, R} <: Op
+struct Op2Sym{c} <: Op end
+struct Op2Partial{c, R} <: Op
     r::R
 end
-immutable Op2{c, L, R} <: Fn
+struct Op2{c, L, R} <: Fn
     l::L
     r::R
 end
 
-immutable ConcArr <: Arr
+struct ConcArr <: Arr
     l
     r
 end
 
-immutable PrimFn{c} <: Fn end
+struct PrimFn{c} <: Fn end
 
-immutable UDefFn{arity} <: Fn
+struct UDefFn{arity} <: Fn
     ast
 end
 
@@ -117,16 +121,16 @@ const dyadic_operators = ['.', '⋅']
 const argnames = ['α', 'ω']
 
 # Identity elements
-identity{T}(::PrimFn{'+'}, ω::Type{T}) = zero(T)
+identity(::PrimFn{'+'}, ω::Type{T}) where {T} = zero(T)
 identity(::PrimFn{'+'}, ω::Type{Bool}) = 0
 identity(::PrimFn{'-'}, ω::Type{Bool}) = 0
-identity{T}(::PrimFn{'-'}, ω::Type{T}) = zero(T)
-identity{T}(::PrimFn{'×'}, ω::Type{T}) = one(T)
-identity{T}(::PrimFn{'∨'}, ω::Type{T}) = zero(T)
-identity{T}(::PrimFn{'∧'}, ω::Type{T}) = one(T)
-identity{T}(::PrimFn{'⌈'}, ω::Type{T}) = typemin(T)
-identity{T}(::PrimFn{'⌊'}, ω::Type{T}) = typemax(T)
-identity{T}(::PrimFn{'='}, ω::Type{T}) = true
-identity{T}(::PrimFn{','}, ω::Type{T}) = [] # ...
-identity{T}(op::Op1, ω::Type{T}) = identity(op.l, ω)
-identity{T}(x,y::T) = error("Could not determine the identity element for the operation $(x) for argtype $T")
+identity(::PrimFn{'-'}, ω::Type{T}) where {T} = zero(T)
+identity(::PrimFn{'×'}, ω::Type{T}) where {T} = one(T)
+identity(::PrimFn{'∨'}, ω::Type{T}) where {T} = zero(T)
+identity(::PrimFn{'∧'}, ω::Type{T}) where {T} = one(T)
+identity(::PrimFn{'⌈'}, ω::Type{T}) where {T} = typemin(T)
+identity(::PrimFn{'⌊'}, ω::Type{T}) where {T} = typemax(T)
+identity(::PrimFn{'='}, ω::Type{T}) where {T} = true
+identity(::PrimFn{','}, ω::Type{T}) where {T} = [] # ...
+identity(op::Op1, ω::Type{T}) where {T} = identity(op.l, ω)
+identity(x,y::T) where {T} = error("Could not determine the identity element for the operation $(x) for argtype $T")
