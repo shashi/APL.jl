@@ -19,19 +19,19 @@ function show(io::IO, a::Apply2)
     show(io, a.r)
     write(io, ')')
 end
-function show{c}(io::IO, a::Op2{c})
+function show(io::IO, a::Op2{c}) where c
     write(io, '(')
     show(io, a.l)
     write(io, c)
     show(io, a.r)
     write(io, ')')
 end
-function show{c}(io::IO, a::Op1{c})
+function show(io::IO, a::Op1{c}) where c
     write(io, '(')
     show(io, a.l)
     write(io, c)
     write(io, ')')
 end
 show(io::IO, a::ConcArr) = (show(io, a.l); write(io, ' '); show(io, a.r))
-show{c}(io::IO, a::PrimFn{c}) = write(io, c)
+show(io::IO, a::PrimFn{c}) where {c} = write(io, c)
 show(io::IO, f::UDefFn) = (write(io, '{'); show(io, f.ast); write(io, '}'))

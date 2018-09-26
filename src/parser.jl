@@ -2,16 +2,16 @@
 include("defns.jl")
 
 "e.g. 1 2 3"
-cons(l, ::Void) = l
+cons(l, ::Nothing) = l
 
 "e.g. +/"
-cons{L<:Fn, c}(l::L, ::Op1Sym{c}) = Op1{c, L}(l)
+cons(l::L, ::Op1Sym{c}) where {L<:Fn, c} = Op1{c, L}(l)
 
 "e.g. .×"
-cons{c, R<:Fn}(l::Op2Sym{c}, r::R) = Op2Partial{c, R}(r)
+cons(l::Op2Sym{c}, r::R) where {c, R<:Fn} = Op2Partial{c, R}(r)
 
 "e.g. +⋅×"
-cons{c, L<:Fn, R}(l::L, r::Op2Partial{c,R}) = Op2{c, L, R}(l, r.r)
+cons(l::L, r::Op2Partial{c,R}) where {c, L<:Fn, R} = Op2{c, L, R}(l, r.r)
 
 "e.g. - 1 2 3"
 cons(l::Union{Fn, Op}, r::Arr) = Apply(l, r)
@@ -26,16 +26,16 @@ cons(a::Arr, b::Arr) = ConcArr(a,b) # is this even correct?
 cons(l::Arr, r::Apply) = Apply2(r.f, l, r.r)
 
 "e.g. /ι10"
-cons{T<:Fn}(l::Op1Sym, r::Apply{T}) = Apply(l, r)
+cons(l::Op1Sym, r::Apply{T}) where {T<:Fn} = Apply(l, r)
 
 "e.g. -/ι10"
-cons{T<:Fn}(l::Fn, r::Apply{T}) = Apply(l, r)
+cons(l::Fn, r::Apply{T}) where {T<:Fn} = Apply(l, r)
 
 "e.g. ↔/⍬"
-cons{c}(l::Op1Sym{c}, r::Union{Op1Sym,OpSymPair}) = OpSymPair{c}(r)
+cons(l::Op1Sym{c}, r::Union{Op1Sym,OpSymPair}) where {c} = OpSymPair{c}(r)
 
 "e.g. ×↔/⍬"
-cons{L<:Fn, c}(l::L, ops::OpSymPair{c}) = cons(Op1{c, L}(l), ops.r)
+cons(l::L, ops::OpSymPair{c}) where {L<:Fn, c} = cons(Op1{c, L}(l), ops.r)
 
 # "e.g ι3 × ι3"
 # cons(l::Fn, r::Apply2) = Apply2(r.f, cons(l, r.l), r.r)
@@ -112,6 +112,6 @@ function parse_strand(str, i)
         end
     end
     s = reverse(strip(takebuf_string(buf), ['\,']))
-    parse(scalar ? s : "[$s]") |> eval, broke ? p : i
+    Meta.parse(scalar ? s : "[$s]") |> eval, broke ? p : i
 end
 
