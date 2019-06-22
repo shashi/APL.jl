@@ -55,3 +55,10 @@ APL_j> (5 5) ρ (⍋⍋,(ι5)+∘ι5)
   7  12  17  21  24
  11  16  20  23  25
 ```
+
+
+### Warnings
+
+This repository is still in the process of being updated and has many
+bugs. Always make sure you properly enclose code in parentheses,
+otherwise the parser can get stuck in an infite loop.

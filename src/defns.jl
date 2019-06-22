@@ -66,7 +66,7 @@ function ⊤(V,n::AbstractArray)
     n′ = convert(Array, n)
     reduce(vcat, [⊤(V′,nn)' for nn in n′])'
 end
-ι(V,W)=[v∈W ? findfirst(W,v) : 1+length(W) for v in V] 
+ι(V,W)=[v ∈ W ? findfirst(x -> x == v, W) : 1+length(W) for v in V] 
 
 function prefix_scan(f, x, v0) # optimizations are just dispatch on f!
     fst = f(v0, x[1])
