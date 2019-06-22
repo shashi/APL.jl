@@ -47,7 +47,7 @@ REPL mode APL Mode initialized. Press } to enter and backspace to exit.
 ```
 as instructed, if we press the `}` key, we enter an APL repl mode
 ```julia
-APjL> (5 5) ρ (⍋⍋,(ι5)+∘ι5)
+APL_j> (5 5) ρ (⍋⍋,(ι5)+∘ι5)
 5×5 Array{Int64,2}:
   1   3   6  10  15
   2   5   9  14  19
