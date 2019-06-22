@@ -6,7 +6,7 @@ using APL
 
 1:5)*(1:5)'
 ```
-```julia
+```
 5×5 Array{Int64,2}:
  1   2   3   4   5
  2   4   6   8  10
@@ -18,7 +18,7 @@ ____
 ```julia
 apl"(ι5) ×∘ ι5"
 ```
-```julia
+```
 5×5 Array{Int64,2}:
  1   2   3   4   5
  2   4   6   8  10
@@ -30,7 +30,7 @@ ____
 ```julia
 reshape(sortperm(((1:5).+(1:5)')[:]) |> sortperm, 5, 5)
 ```
-```julia
+```
 5×5 Array{Int64,2}:
   1   3   6  10  15
   2   5   9  14  19
@@ -42,7 +42,7 @@ ____
 ```julia
 apl"(5 5) ρ (⍋⍋, (ι5)+∘ι5)"
 ```
-```julia
+```
 5×5 Array{Int64,2}:
   1   3   6  10  15
   2   5   9  14  19
@@ -56,7 +56,7 @@ uniq = apl"{((ι ρ ω) = (ω ι ω))]ω}"
 v = [3, 2, 1, 3, 4, 2, 1, 7, 4, 2, 2, 3]
 x = uniq(v)
 ```
-```julia
+```
 5-element Array{Int64,1}:
  3
  2
@@ -69,7 +69,7 @@ ____
 # Frequency distribution
 [x apl"{+/(α=∘ω)}"(x,v)]
 ```
-```julia
+```
 5×2 Array{Int64,2}:
  3  3
  2  4
@@ -81,7 +81,7 @@ ____
 ```julia
 apl"(16 16 16) ⊤ (877 123 43)"
 ```
-```julia
+```
 3×3 LinearAlgebra.Adjoint{Int64,Array{Int64,2}}:
   3   0   0
   6   7   2
