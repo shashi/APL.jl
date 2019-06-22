@@ -4,7 +4,7 @@ A DSL for embedding the APL programming language in Julia
 ```julia
 using APL
 
-1:5)*(1:5)'
+(1:5)*(1:5)'
 ```
 ```
 5×5 Array{Int64,2}:
