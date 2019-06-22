@@ -1,0 +1,6 @@
+name = "APL"
+uuid = "bd124be4-b496-4347-a5a2-a68e104c1514"
+version = "0.1.0"
+
+[deps]
+ReplMaker = "b873ce64-0db9-51f5-a568-4457d8e49576"
