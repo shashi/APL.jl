@@ -42,15 +42,16 @@ cons(l::L, ops::OpSymPair{c}) where {L<:Fn, c} = cons(Op1{c, L}(l), ops.r)
 
 cons(x, y) = error("Invalid syntax: $x next to $y")
 
-parse_apl(str) = parse_apl(reverse(replace(str, r"\s+", " ")), start(str), 0, 0)[1]
+parse_apl(str) = parse_apl(reverse(replace(str, r"\s+" => " ")), 1, 0, 0)[1]
 function parse_apl(s, i, paren_level, curly_level)
     # top-level parsing
+    
     exp = nothing
-
     arity = 0
 
-    while !done(s, i)
-        c, nxt = next(s, i)
+    iter_result = iterate(s, i)
+    while iter_result !== nothing
+        (c, nxt) = iter_result
         if c == ' '
         elseif c == ')'
             subexp,nxt,plvl,clvl,arity = parse_apl(s, nxt, paren_level+1, curly_level)
@@ -84,7 +85,7 @@ function parse_apl(s, i, paren_level, curly_level)
         else
             error("$c: undefined APL symbol")
         end
-        i=nxt
+        iter_result = iterate(s, nxt)
     end
     exp,i,paren_level, curly_level, arity
 end
@@ -94,9 +95,11 @@ function parse_strand(str, i)
     p = i
     broke = false
     scalar = true
-    while !done(str, i)
+    
+    iter_result = iterate(str, i)
+    while iter_result !== nothing
         p = i
-        c, i = next(str, i)
+        c, i = iter_result
         if c == ' '
             write(buf, ',')
             scalar=false
@@ -110,8 +113,8 @@ function parse_strand(str, i)
             broke = true
             break
         end
+        iter_result = iterate(str, i)
     end
-    s = reverse(strip(takebuf_string(buf), ['\,']))
+    s = reverse(strip(String(take!(buf)), [',']))
     Meta.parse(scalar ? s : "[$s]") |> eval, broke ? p : i
 end
-

@@ -93,7 +93,7 @@ const prim_fns = [
   ( '⊛', (:log, :log)),
   ( '○', (:(π*ω), nothing)),
   ( '~', (:!, nothing)),
-  ( '⌹', (:inv, :\)),
+  ( '⌹', (:inv, :\ )),
   ( 'ι', (:(1:ω[1]), :(ι(α, ω)))), # ω[1] is not really right
   ( '?', (:(rand(1:ω[1])), nothing)),
   ( '>', (nothing, :(.>))),
@@ -109,10 +109,10 @@ const prim_fns = [
   ( '⍋', (:sortperm, nothing)),
   ( '⍒', (:(sortperm(ω, rev=true)), nothing)),
   ( 'ρ', (:([size(ω)...]), :(reshape(ω, tuple(α...))))),
-  ( '⍉', (:(ω.'), :permutedims)),
+  ( '⍉', (:(adjoint.(ω)), :permutedims)),
   ( '⌽', (:(flipdim(ω, 1)), nothing)),
   ( '↓', (nothing, :(ω[α+1:length(ω)]))),
-  ( '↑', (nothing, :(ω[1:α]))),
+  ( '↑', (nothing, :(ω[1:α])))
 ]
 const function_names = map(x->x[1], prim_fns)
 const numeric = ['⁻', ' ', '0':'9'..., '.']
