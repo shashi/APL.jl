@@ -1,49 +1,49 @@
 
-abstract Arr
-abstract Op
-abstract Fn
+abstract type Arr end
+abstract type Op end
+abstract type Fn end
 
-immutable Α <: Arr end
-immutable Ω <: Arr end
-immutable Apply{T} <: Arr # This could both be a funciton or an array....
+struct Α <: Arr end
+struct Ω <: Arr end
+struct Apply{T} <: Arr # This could both be a funciton or an array....
     f::T
     r::Arr
 end
-immutable Apply2{T} <: Arr
+struct Apply2{T} <: Arr
     f::T
     l::Arr
     r::Arr
 end
-immutable JlVal <: Arr
+struct JlVal <: Arr
     val
 end
 
-immutable Op1Sym{c} <: Op end
+struct Op1Sym{c} <: Op end
 
-immutable Op1{c, L} <: Fn
+struct Op1{c, L} <: Fn
     l::L
 end
-immutable OpSymPair{c} <: Op
+struct OpSymPair{c} <: Op
     r # Op1Sym
 end
 
-immutable Op2Sym{c} <: Op end
-immutable Op2Partial{c, R} <: Op
+struct Op2Sym{c} <: Op end
+struct Op2Partial{c, R} <: Op
     r::R
 end
-immutable Op2{c, L, R} <: Fn
+struct Op2{c, L, R} <: Fn
     l::L
     r::R
 end
 
-immutable ConcArr <: Arr
+struct ConcArr <: Arr
     l
     r
 end
 
-immutable PrimFn{c} <: Fn end
+struct PrimFn{c} <: Fn end
 
-immutable UDefFn{arity} <: Fn
+struct UDefFn{arity} <: Fn
     ast
 end
 
@@ -62,7 +62,7 @@ function ⊤(V,n::AbstractArray)
     n′ = convert(Array, n)
     reduce(vcat, [⊤(V′,nn)' for nn in n′])'
 end
-ι(V,W)=[v∈W ? findfirst(W,v) : 1+length(W) for v in V] 
+ι(V,W)=[v∈W ? findfirst(isequal(v), W) : 1+length(W) for v in V] 
 
 function prefix_scan(f, x, v0) # optimizations are just dispatch on f!
     fst = f(v0, x[1])
@@ -76,7 +76,7 @@ end
 
 # More definitions
 const prim_fns = [
-  ( '+', (:+, :+)),
+  ( '+', (:.+, :.+)),
   ( '-', (:-, :-)),
   ( '÷', (:(1/ω), :/)),
   ( '×', (:sign, :(α.*ω))),
@@ -105,7 +105,7 @@ const prim_fns = [
   ( '⍋', (:sortperm, nothing)),
   ( '⍒', (:(sortperm(ω, rev=true)), nothing)),
   ( 'ρ', (:([size(ω)...]), :(reshape(ω, tuple(α...))))),
-  ( '⍉', (:(ω.'), :permutedims)),
+  ( '⍉', (:(x->permutedims(x, ntuple(i->ndims(x) - i + 1, ndims(x)))), :permutedims)),
   ( '⌽', (:(flipdim(ω, 1)), nothing)),
   ( '↓', (nothing, :(ω[α+1:length(ω)]))),
   ( '↑', (nothing, :(ω[1:α]))),
@@ -117,16 +117,16 @@ const dyadic_operators = ['.', '⋅']
 const argnames = ['α', 'ω']
 
 # Identity elements
-identity{T}(::PrimFn{'+'}, ω::Type{T}) = zero(T)
-identity(::PrimFn{'+'}, ω::Type{Bool}) = 0
-identity(::PrimFn{'-'}, ω::Type{Bool}) = 0
-identity{T}(::PrimFn{'-'}, ω::Type{T}) = zero(T)
-identity{T}(::PrimFn{'×'}, ω::Type{T}) = one(T)
-identity{T}(::PrimFn{'∨'}, ω::Type{T}) = zero(T)
-identity{T}(::PrimFn{'∧'}, ω::Type{T}) = one(T)
-identity{T}(::PrimFn{'⌈'}, ω::Type{T}) = typemin(T)
-identity{T}(::PrimFn{'⌊'}, ω::Type{T}) = typemax(T)
-identity{T}(::PrimFn{'='}, ω::Type{T}) = true
-identity{T}(::PrimFn{','}, ω::Type{T}) = [] # ...
-identity{T}(op::Op1, ω::Type{T}) = identity(op.l, ω)
-identity{T}(x,y::T) = error("Could not determine the identity element for the operation $(x) for argtype $T")
+identity(::PrimFn{'+'}, T::Type) = zero(T)
+identity(::PrimFn{'+'}, ::Type{Bool}) = 0
+identity(::PrimFn{'-'}, ::Type{Bool}) = 0
+identity(::PrimFn{'-'}, T::Type) = zero(T)
+identity(::PrimFn{'×'}, T::Type) = one(T)
+identity(::PrimFn{'∨'}, T::Type) = zero(T)
+identity(::PrimFn{'∧'}, T::Type) = one(T)
+identity(::PrimFn{'⌈'}, T::Type) = typemin(T)
+identity(::PrimFn{'⌊'}, T::Type) = typemax(T)
+identity(::PrimFn{'='}, T::Type) = true
+identity(::PrimFn{','}, T::Type) = [] # ...
+identity(op::Op1, T::Type) = identity(op.l, T)
+identity(x,T::Type) = error("Could not determine the identity element for the operation $(x) for argtype $T")

@@ -23,19 +23,19 @@ for (sym, fns) in prim_fns
 end
 
 function actuallyreducedim(f, xs::AbstractArray, ident)
-    squeeze(
-        reducedim(f, xs, ndims(xs), ident),
-        ndims(xs)
+    dropdims(
+        reduce(f, xs, dims=ndims(xs), init=ident),
+        dims=ndims(xs)
     )
 end
 
 function actuallyreducedim(f, xs::AbstractVector, ident)
-    reduce(f, ident, xs)
+    reduce(f, xs, init=ident)
 end
 
 # call methods for primitive operators
 (op::Op1{'/'})(ω) = actuallyreducedim(op.l, ω, identity(op.l, eltype(ω)))
-(op::Op1{'⌿'})(ω) = reducedim(op.l, ω, 1, identity(op.l, eltype(ω)))
+(op::Op1{'⌿'})(ω) = dropdims(reduce(op.l, ω, init=identity(op.l, eltype(ω)), dims=1), dims=1)
 (op::Op1{'\\'})(ω) = prefix_scan(op.l, ω, identity(op.l, ω))
 (op::Op1{'⍀'})(ω) = prefix_scan(op.l, ω, identity(op.l, ω)) # Todo
 (op::Op1{'¨'})(ω) = map(op.l, ω)
