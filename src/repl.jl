@@ -4,7 +4,7 @@ function apl_reader(str)
     parse_apl(str) |> eval_apl
 end
 
-function init_repl(; prompt_text="julia-APL> ", prompt_color = :red, start_key = ">", sticky=true)
+function init_repl(; prompt_text="APL.jl> ", prompt_color = :red, start_key = "/", sticky=true)
     ReplMaker.initrepl(str -> eval_apl(parse_apl(str)),
 	               repl = Base.active_repl,
 	               prompt_text = prompt_text,

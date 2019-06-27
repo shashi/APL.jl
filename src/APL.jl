@@ -11,4 +11,6 @@ macro apl_str(str)
     parse_apl(str) |> eval_apl |> esc
 end
 
+__init__() = init_repl()
+
 end # module
