@@ -11,6 +11,6 @@ macro apl_str(str)
     parse_apl(str) |> eval_apl |> esc
 end
 
-__init__() = init_repl()
+__init__() = isdefined(Base, :active_repl) ? init_repl() : nothing
 
 end # module
