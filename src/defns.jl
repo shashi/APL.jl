@@ -75,6 +75,7 @@ function prefix_scan(f, x, v0) # optimizations are just dispatch on f!
 end
 
 # More definitions
+const iota = (:(1:ω[1]), :(ι(α, ω)))  # ω[1] is not really right
 const prim_fns = [
   ( '+', (:.+, :.+)),
   ( '-', (:-, :-)),
@@ -90,7 +91,8 @@ const prim_fns = [
   ( '○', (:(π*ω), nothing)),
   ( '~', (:!, nothing)),
   ( '⌹', (:inv, :\)),
-  ( 'ι', (:(1:ω[1]), :(ι(α, ω)))), # ω[1] is not really right
+  ( 'ι', iota),
+  ( '⍳', iota),
   ( '?', (:(rand(1:ω[1])), nothing)),
   ( '>', (nothing, :(.>))),
   ( '<', (nothing, :(.<))),
